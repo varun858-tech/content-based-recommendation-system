@@ -32,3 +32,17 @@ This model represents a massive upgrade in tonal recognition. For example, *Figh
 * **Zero Semantic Understanding:** The model only counts word occurrences; it has no true comprehension of meaning. It cannot distinguish between conceptually opposite words like "hope" and "despair."
 * **Frequency Bias:** Highly common descriptive words (e.g., "drama" or "crime") heavily dominate the mathematical similarity scores, often drowning out rare but highly specific and powerful thematic keywords.
 * **Lack of Hierarchy:** Every word is weighted identically ("dark" == "prison" == "based on novel"), which does not align with how humans actually prioritize concepts when recommending a film.
+
+## Level 3: Word Normalization (Stemming & Lemmatization)
+This repository contains the third iteration of the recommendation engine. The objective of this phase was to implement Natural Language Processing (NLP) techniques to clean the "noise" in the Bag of Words vocabulary, ensuring that different tenses of the same word (e.g., "loves", "loving", "loved") are mathematically treated as the same feature.
+
+### The Methodology
+1. **The Stemming Approach:** Initially applied NLTK's `PorterStemmer` to forcefully chop words down to their root forms.
+2. **The Lemmatization Upgrade:** Recognizing the flaws in blunt stemming, the pipeline was upgraded to use `WordNetLemmatizer`.
+3. **Part-of-Speech (POS) Tagging:** To make lemmatization accurate, a custom function was engineered to tag the grammatical role of every word. This ensures context is preserved (e.g., "running" as a verb becomes "run", but "running" as a noun stays "running").
+4. **Re-Vectorization:** The cleaned "bag" was passed back through the `CountVectorizer` and the on-the-go Cosine Similarity logic to generate new recommendations.
+
+### Findings & System Limitations
+* **The Stemming Flaw (Accidental Overlap):** Stemming proved to be too aggressive and context-blind. For example, "universe" (space film) and "university" (college film) were both stemmed to the root `"univers"`. This caused the model to falsely assume high similarity between completely unrelated movies. 
+* **The Lemmatization Trade-Off:** While Lemmatization with POS tagging completely fixed the accidental overlaps, it was significantly slower and more computationally expensive to run across a dataset of 62,000 films.
+* **The Ultimate Reality Check:** The most crucial finding of Level 3 is that word normalization ultimately had **only a minor impact** on the final recommendations. While the vocabulary was cleaner, the core mathematical logic remained unchanged: the system still only *counts* words. It still lacks true semantic understanding and still suffers from frequency bias.
