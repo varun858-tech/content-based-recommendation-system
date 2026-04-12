@@ -46,3 +46,20 @@ This repository contains the third iteration of the recommendation engine. The o
 * **The Stemming Flaw (Accidental Overlap):** Stemming proved to be too aggressive and context-blind. For example, "universe" (space film) and "university" (college film) were both stemmed to the root `"univers"`. This caused the model to falsely assume high similarity between completely unrelated movies. 
 * **The Lemmatization Trade-Off:** While Lemmatization with POS tagging completely fixed the accidental overlaps, it was significantly slower and more computationally expensive to run across a dataset of 62,000 films.
 * **The Ultimate Reality Check:** The most crucial finding of Level 3 is that word normalization ultimately had **only a minor impact** on the final recommendations. While the vocabulary was cleaner, the core mathematical logic remained unchanged: the system still only *counts* words. It still lacks true semantic understanding and still suffers from frequency bias.
+
+## Level 4: Thematic Weighting (TF-IDF)
+This repository contains the final iteration of the recommendation engine. The objective of this phase was to solve the "Frequency Bias" inherent in the Bag of Words model by implementing **Term Frequency-Inverse Document Frequency (TF-IDF)** vectorization.
+
+### The Methodology
+1. **Mathematical Weighting:** Replaced `CountVectorizer` with Scikit-Learn's `TfidfVectorizer`. Instead of merely counting words, the system now calculates a weight for each word based on two factors:
+   * **Term Frequency (TF):** How often a word appears in a specific movie's feature set.
+   * **Inverse Document Frequency (IDF):** How rare the word is across the entire 62,000+ movie dataset.
+2. **Algorithmic Shift:** Common genre tags (like "action" or "sci-fi") mathematically receive a massive penalty, while rare, highly specific thematic tags (like "heist" or "time-loop") receive a significant boost.
+3. **Similarity Calculation:** The system continues to use on-the-go **Cosine Similarity**, but the geometric distance is now dictated by shared *important* themes rather than shared *common* words.
+
+### Findings & System Limitations
+The implementation of TF-IDF successfully transformed the recommendation logic. For example, when searching for *Inception*, the model accurately down-weighted generic overlaps like "sci-fi" causing previously highly-ranked films to drop, prioritizing films with higher thematic density instead. However, the foundational limits of keyword matching remain:
+* **Zero Semantics:** The model still lacks true semantic comprehension. It cannot recognize that "dream" and "subconscious" mean the same thing.
+* **Exact Word Dependency:** If two movies express the exact same concept using different vocabulary, the system completely misses the connection.
+* **Context Blindness:** The mathematical weighting does not understand the context or grammatical role of the words being used.
+* **Vector Sparsity:** The mathematical vectors remain highly dimensional and are mostly populated by zeroes, which leaves room for future optimization.
