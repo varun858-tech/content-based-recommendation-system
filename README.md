@@ -63,3 +63,20 @@ The implementation of TF-IDF successfully transformed the recommendation logic. 
 * **Exact Word Dependency:** If two movies express the exact same concept using different vocabulary, the system completely misses the connection.
 * **Context Blindness:** The mathematical weighting does not understand the context or grammatical role of the words being used.
 * **Vector Sparsity:** The mathematical vectors remain highly dimensional and are mostly populated by zeroes, which leaves room for future optimization.
+
+## Level 5: The Hybrid Discovery Pipeline (Production-Ready)
+This repository contains the final, production-ready iteration of the recommendation engine. The objective of this phase was to transition from an academic Jupyter Notebook environment into a robust Python pipeline, integrating custom feature weighting and Bayesian statistics to deliver high-quality, thematic recommendations.
+
+### The Methodology
+1. **Bayesian Weighted Ratings:** Implemented the IMDB weighted rating formula: $\frac{v}{v+m} \cdot R + \frac{m}{v+m} \cdot C$. This prevents obscure films with a single 10/10 rating from outranking critically acclaimed classics with thousands of reviews.
+2. **Custom Feature Weighting:** Engineered the tags by mathematically boosting the director (`crew * 3`) and thematic elements (`keywords * 4`, `genres * 4`). This forces the algorithm to prioritize the "creative DNA" of a film over generic plot summaries.
+3. **Hybrid Scoring Algorithm:** Calculated a final recommendation score blending three distinct metrics:
+   * **60%** Content Similarity (TF-IDF Cosine Distance)
+   * **25%** Bayesian Rating (Quality)
+   * **15%** Popularity (Normalized Vote Count)
+4. **Director's Spotlight:** Engineered a secondary retrieval function to surface other top-rated films by the target movie's director, enhancing the user discovery experience.
+
+### Findings & System Limitations
+* **High Thematic Accuracy:** The hybrid approach successfully identifies complex cinematic styles. For example, it accurately matched *Pather Panchali* with *Bicycle Thieves*, recognizing the underlying "Neorealism" tone across different decades and languages.
+* **Quality Control:** The integration of the Bayesian rating successfully filters out low-quality "trash" matches. The system no longer recommends objectively bad films just because they share the same keywords.
+* **The Serialization Bottleneck:** While the pipeline produces A-tier results, running the full NLP lemmatization and TF-IDF vectorization on 62,000+ movies on-the-fly is computationally expensive. For a web deployment (e.g., Streamlit), the processed dataframes and similarity vectors must be serialized (Pickled) to avoid massive loading times.
