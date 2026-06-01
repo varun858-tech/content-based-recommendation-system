@@ -64,19 +64,103 @@ The implementation of TF-IDF successfully transformed the recommendation logic. 
 * **Context Blindness:** The mathematical weighting does not understand the context or grammatical role of the words being used.
 * **Vector Sparsity:** The mathematical vectors remain highly dimensional and are mostly populated by zeroes, which leaves room for future optimization.
 
-## Level 5: The Hybrid Discovery Pipeline (Production-Ready)
-This repository contains the final, production-ready iteration of the recommendation engine. The objective of this phase was to transition from an academic Jupyter Notebook environment into a robust Python pipeline, integrating custom feature weighting and Bayesian statistics to deliver high-quality, thematic recommendations.
+## Level 5.1: Metadata Fusion & Hybrid Ranking
+
+This repository contains the fifth iteration of the recommendation engine. The objective of this phase was to move beyond user-generated tags and build a richer representation of a film by integrating multiple metadata sources. The goal was to capture the complete "creative identity" of a movie through its cast, director, keywords, genres, and plot description while simultaneously improving recommendation quality through ranking heuristics.
 
 ### The Methodology
-1. **Bayesian Weighted Ratings:** Implemented the IMDB weighted rating formula: $\frac{v}{v+m} \cdot R + \frac{m}{v+m} \cdot C$. This prevents obscure films with a single 10/10 rating from outranking critically acclaimed classics with thousands of reviews.
-2. **Custom Feature Weighting:** Engineered the tags by mathematically boosting the director (`crew * 3`) and thematic elements (`keywords * 4`, `genres * 4`). This forces the algorithm to prioritize the "creative DNA" of a film over generic plot summaries.
-3. **Hybrid Scoring Algorithm:** Calculated a final recommendation score blending three distinct metrics:
-   * **60%** Content Similarity (TF-IDF Cosine Distance)
-   * **25%** Bayesian Rating (Quality)
-   * **15%** Popularity (Normalized Vote Count)
-4. **Director's Spotlight:** Engineered a secondary retrieval function to surface other top-rated films by the target movie's director, enhancing the user discovery experience.
+
+1. **Dataset Expansion:** Transitioned from the MovieLens dataset to the TMDB Metadata Dataset, merging information from `movies_metadata.csv`, `credits.csv`, and `keywords.csv`.
+2. **Metadata Extraction:** Parsed JSON-like structures to extract:
+
+   * Genres
+   * Top 3 Cast Members
+   * Director
+   * Keywords
+   * Plot Overview
+3. **Custom Feature Weighting:** Engineered a weighted metadata representation:
+
+   * Genres × 4
+   * Keywords × 4
+   * Director × 3
+   * Cast × 2
+   * Overview × 1
+
+   This weighting strategy forces the model to prioritize the creative DNA of a film over generic descriptive text.
+4. **Advanced Vectorization:** Applied Lemmatization followed by TF-IDF Vectorization with `ngram_range=(1,3)` to capture both individual words and meaningful phrases.
+5. **Quality Re-Ranking:** Instead of relying solely on cosine similarity, a final recommendation score was computed using:
+
+   * **60%** Content Similarity
+   * **25%** Rating Score
+   * **15%** Popularity Score
+6. **Director's Spotlight:** Implemented a secondary recommendation module that surfaces other highly-rated works from the target film's director.
 
 ### Findings & System Limitations
-* **High Thematic Accuracy:** The hybrid approach successfully identifies complex cinematic styles. For example, it accurately matched *Pather Panchali* with *Bicycle Thieves*, recognizing the underlying "Neorealism" tone across different decades and languages.
-* **Quality Control:** The integration of the Bayesian rating successfully filters out low-quality "trash" matches. The system no longer recommends objectively bad films just because they share the same keywords.
-* **The Serialization Bottleneck:** While the pipeline produces A-tier results, running the full NLP lemmatization and TF-IDF vectorization on 62,000+ movies on-the-fly is computationally expensive. For a web deployment (e.g., Streamlit), the processed dataframes and similarity vectors must be serialized (Pickled) to avoid massive loading times.
+
+This iteration produced the first genuinely high-quality recommendations in the project lifecycle. For example:
+
+* *Fight Club* successfully surfaced films such as *Se7en*, *Oldboy*, and *The Machinist*, reflecting psychological themes rather than merely genre overlap.
+* *Pather Panchali* aligned with films such as *Bicycle Thieves* and *The World of Apu*, indicating that the system was beginning to capture cinematic style and narrative tone.
+* The Director's Spotlight feature significantly improved user discovery and exploration.
+
+However, several limitations remained:
+
+* **Manual Feature Engineering:** The weighting coefficients (`genres × 4`, `keywords × 4`, etc.) were selected heuristically rather than learned automatically.
+* **Vocabulary Dependency:** The model still relies on exact keyword overlap and cannot recognize semantic equivalents.
+* **Sparse Representations:** Despite TF-IDF improvements, the vectors remain highly sparse and computationally expensive.
+
+---
+
+## Level 5.2: NLP Refinement & Production Optimization
+
+This repository contains the sixth iteration of the recommendation engine. The objective of this phase was not to redesign the recommendation algorithm, but rather to improve the quality of the textual feature space by reducing linguistic noise and strengthening the influence of meaningful narrative information.
+
+### The Methodology
+
+1. **Overview Cleaning:** Implemented NLTK English Stopword Removal to eliminate low-information words such as:
+
+   * "the"
+   * "is"
+   * "was"
+   * "and"
+   * "of"
+2. **Narrative Compression:** Limited plot summaries to the first 50 meaningful words after stopword filtering, preventing excessively long overviews from dominating the feature space.
+3. **Metadata Preservation:** Retained the weighted metadata architecture introduced in Level 5.1:
+
+   * Genres × 4
+   * Keywords × 4
+   * Director × 3
+   * Cast × 2
+   * Overview × 1
+4. **Re-Vectorization:** Rebuilt TF-IDF vectors using the cleaner feature representation and regenerated recommendation rankings using the hybrid scoring pipeline.
+
+### Findings & System Limitations
+
+This phase produced smaller but important improvements:
+
+* **Cleaner Narrative Signals:** Plot summaries now contribute meaningful concepts rather than grammatical filler words.
+* **Improved Stability:** Recommendations became less sensitive to noisy wording inside movie overviews.
+* **Better Feature Utilization:** The weighted metadata components exert greater influence because they are no longer competing with large volumes of low-information text.
+
+The recommendation outputs remained largely consistent with Level 5.1, which is a positive indicator that the model's thematic understanding was already robust.
+
+However, the fundamental limitations remain unchanged:
+
+* **No Semantic Understanding:** The model still cannot understand that words such as "automobile" and "car" refer to the same concept.
+* **No Contextual Reasoning:** TF-IDF remains a keyword-based system and cannot infer meaning from sentence structure.
+* **Feature Weights Remain Handcrafted:** The ranking mechanism still depends on manually engineered coefficients.
+* **Classical NLP Ceiling:** Further preprocessing improvements now yield diminishing returns.
+
+### Key Takeaway
+
+Level 5.2 represents the practical ceiling of a classical TF-IDF recommendation architecture. At this stage, the system combines:
+
+* Metadata Fusion
+* Feature Weighting
+* Lemmatization
+* Stopword Removal
+* TF-IDF Vectorization
+* Hybrid Ranking
+* Director-Based Discovery
+
+Future improvements require a fundamental shift away from keyword matching and toward semantic embeddings generated by modern transformer-based language models.
